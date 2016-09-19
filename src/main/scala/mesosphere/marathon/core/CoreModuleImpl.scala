@@ -199,9 +199,13 @@ class CoreModuleImpl @Inject() (
   // PODS
 
   override lazy val podModule: PodModule =
-    PodModule(groupManagerModule.groupManager)(
+    PodModule(
+      groupManagerModule.groupManager,
+      taskTrackerModule.instanceTracker,
+      scheduler.get())(
       actorsModule.materializer,
-      ExecutionContext.global, java.time.Clock.systemUTC())
+      ExecutionContext.global,
+      java.time.Clock.systemUTC())
 
   // GREEDY INSTANTIATION
   //
