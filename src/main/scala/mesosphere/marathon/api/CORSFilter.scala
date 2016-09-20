@@ -1,11 +1,11 @@
 package mesosphere.marathon.api
 
-import javax.inject.{ Inject }
+import javax.inject.Inject
 import javax.servlet._
 import javax.servlet.http.{ HttpServletRequest, HttpServletResponse }
-import mesosphere.marathon.{ MarathonConf }
 
-import scala.collection.JavaConverters._
+import mesosphere.marathon.MarathonConf
+import mesosphere.marathon.stream._
 
 class CORSFilter @Inject() (config: MarathonConf) extends Filter {
 
@@ -31,9 +31,7 @@ class CORSFilter @Inject() (config: MarathonConf) extends Filter {
 
             // Add all headers from request as accepted headers
             val accessControlRequestHeaders =
-              httpRequest.getHeaders("Access-Control-Request-Headers")
-                .asScala
-                .flatMap(_.split(","))
+              toTraversableOnce(httpRequest.getHeaders("Access-Control-Request-Headers")).flatMap(_.split(","))
 
             httpResponse.setHeader("Access-Control-Allow-Headers", accessControlRequestHeaders.mkString(", "))
 

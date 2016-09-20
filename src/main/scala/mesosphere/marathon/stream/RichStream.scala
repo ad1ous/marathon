@@ -2,14 +2,15 @@ package mesosphere.marathon
 package stream
 
 import java.util
-import java.util.{ Spliterator, Spliterators }
 import java.util.stream.{ DoubleStream, IntStream, LongStream, Stream, StreamSupport }
+import java.util.{ Spliterator, Spliterators }
+
+import mesosphere.marathon.functional._
 
 import scala.collection.immutable
 import scala.collection.immutable.Seq
 import scala.compat.java8.OptionConverters._
-import scala.compat.java8.StreamConverters._
-import mesosphere.marathon.functional._
+import scala.compat.java8.StreamConverters
 
 class RichStream[T](stream: Stream[T]) extends TraversableOnce[T] {
   override def foreach[U](f: (T) => U): Unit = stream.forEach(f)
@@ -27,15 +28,15 @@ class RichStream[T](stream: Stream[T]) extends TraversableOnce[T] {
   override def find(p: (T) => Boolean): Option[T] = toScala(stream.filter(p).findFirst())
 
   override def copyToArray[B >: T](xs: Array[B], start: Int, len: Int): Unit =
-    toIterator.copyToArray(xs, start, len)
+    toStream.copyToArray(xs, start, len)
 
   override def toTraversable: Seq[T] = stream.collect(Collectors.seq[T])
 
   override def isTraversableAgain: Boolean = false
 
-  override def toStream: immutable.Stream[T] = stream.toScala[immutable.Stream]
+  override def toStream: immutable.Stream[T] = StreamConverters.RichStream(stream).toScala[immutable.Stream]
 
-  override def toIterator: Iterator[T] = stream.toScala[Iterator]
+  override def toIterator: Iterator[T] = StreamConverters.RichStream(stream).toScala[Iterator]
 }
 
 class RichDoubleStream(stream: DoubleStream) extends TraversableOnce[Double] {
@@ -54,7 +55,7 @@ class RichDoubleStream(stream: DoubleStream) extends TraversableOnce[Double] {
   override def find(p: (Double) => Boolean): Option[Double] = toScala(stream.filter(p).findFirst())
 
   override def copyToArray[B >: Double](xs: Array[B], start: Int, len: Int): Unit =
-    toIterator.copyToArray(xs, start, len)
+    toStream.copyToArray(xs, start, len)
 
   override def toTraversable: Seq[Double] = {
     val supplier = () => Vector.empty[Double]
@@ -66,9 +67,9 @@ class RichDoubleStream(stream: DoubleStream) extends TraversableOnce[Double] {
 
   override def isTraversableAgain: Boolean = false
 
-  override def toStream: immutable.Stream[Double] = stream.toScala[immutable.Stream]
+  override def toStream: immutable.Stream[Double] = StreamConverters.RichDoubleStream(stream).toScala[immutable.Stream]
 
-  override def toIterator: Iterator[Double] = stream.toScala[Iterator]
+  override def toIterator: Iterator[Double] = StreamConverters.RichDoubleStream(stream).toScala[Iterator]
 }
 
 class RichIntStream(stream: IntStream) extends TraversableOnce[Int] {
@@ -87,7 +88,7 @@ class RichIntStream(stream: IntStream) extends TraversableOnce[Int] {
   override def find(p: (Int) => Boolean): Option[Int] = toScala(stream.filter(p).findFirst())
 
   override def copyToArray[B >: Int](xs: Array[B], start: Int, len: Int): Unit =
-    toTraversable.copyToArray(xs, start, len)
+    toStream.copyToArray(xs, start, len)
 
   override def toTraversable: Seq[Int] = {
     val supplier = () => Vector.empty[Int]
@@ -99,9 +100,9 @@ class RichIntStream(stream: IntStream) extends TraversableOnce[Int] {
 
   override def isTraversableAgain: Boolean = false
 
-  override def toStream: immutable.Stream[Int] = stream.toScala[immutable.Stream]
+  override def toStream: immutable.Stream[Int] = StreamConverters.RichIntStream(stream).toScala[immutable.Stream]
 
-  override def toIterator: Iterator[Int] = stream.toScala[Iterator]
+  override def toIterator: Iterator[Int] = StreamConverters.RichIntStream(stream).toScala[Iterator]
 }
 
 class RichLongStream(stream: LongStream) extends TraversableOnce[Long] {
@@ -120,7 +121,7 @@ class RichLongStream(stream: LongStream) extends TraversableOnce[Long] {
   override def find(p: (Long) => Boolean): Option[Long] = toScala(stream.filter(p).findFirst())
 
   override def copyToArray[B >: Long](xs: Array[B], start: Int, len: Int): Unit =
-    toTraversable.copyToArray(xs, start, len)
+    toStream.copyToArray(xs, start, len)
 
   override def toTraversable: Seq[Long] = {
     val supplier = () => Vector.empty[Long]
@@ -132,9 +133,9 @@ class RichLongStream(stream: LongStream) extends TraversableOnce[Long] {
 
   override def isTraversableAgain: Boolean = false
 
-  override def toStream: immutable.Stream[Long] = stream.toScala[immutable.Stream]
+  override def toStream: immutable.Stream[Long] = StreamConverters.RichLongStream(stream).toScala[immutable.Stream]
 
-  override def toIterator: Iterator[Long] = stream.toScala[Iterator]
+  override def toIterator: Iterator[Long] = StreamConverters.RichLongStream(stream).toScala[Iterator]
 }
 
 class RichEnumeration[T](enum: util.Enumeration[T]) extends TraversableOnce[T] {

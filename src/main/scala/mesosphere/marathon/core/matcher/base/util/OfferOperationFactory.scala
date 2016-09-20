@@ -4,10 +4,10 @@ import mesosphere.marathon.WrongConfigurationException
 import mesosphere.marathon.core.launcher.impl.TaskLabels
 import mesosphere.marathon.core.task.Task
 import mesosphere.marathon.core.task.Task.LocalVolume
+import mesosphere.marathon.stream._
 import mesosphere.util.state.FrameworkId
 import org.apache.mesos.Protos.Resource.ReservationInfo
 import org.apache.mesos.{ Protos => Mesos }
-import mesosphere.marathon.stream._
 
 class OfferOperationFactory(
     private val principalOpt: Option[String],
@@ -51,7 +51,7 @@ class OfferOperationFactory(
     }
 
     val reserve = Mesos.Offer.Operation.Reserve.newBuilder()
-      .addAllResources(reservedResources.asJava)
+      .addAllResources(reservedResources)
       .build()
 
     Mesos.Offer.Operation.newBuilder()
@@ -93,8 +93,7 @@ class OfferOperationFactory(
         .build()
     }
 
-    val create = Mesos.Offer.Operation.Create.newBuilder()
-      .addAllVolumes(volumes.asJava)
+    val create = Mesos.Offer.Operation.Create.newBuilder().addAllVolumes(volumes)
 
     Mesos.Offer.Operation.newBuilder()
       .setType(Mesos.Offer.Operation.Type.CREATE)

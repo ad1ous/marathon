@@ -2,7 +2,8 @@ package mesosphere.mesos
 
 import mesosphere.marathon.core.launcher.impl.TaskLabels
 import mesosphere.marathon.core.task.Task
-import mesosphere.marathon.state.{ RunSpec, ResourceRole }
+import mesosphere.marathon.state.{ ResourceRole, RunSpec }
+import mesosphere.marathon.stream._
 import mesosphere.marathon.tasks.{ PortsMatch, PortsMatcher }
 import mesosphere.mesos.protos.Resource
 import org.apache.mesos.Protos
@@ -10,9 +11,7 @@ import org.apache.mesos.Protos.Offer
 import org.slf4j.LoggerFactory
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
-import scala.collection.mutable
 
 object ResourceMatcher {
   type Role = String
@@ -69,10 +68,9 @@ object ResourceMatcher {
       if (!resource.hasReservation || !resource.getReservation.hasLabels)
         Map.empty
       else {
-        import scala.collection.JavaConverters._
-        resource.getReservation.getLabels.getLabelsList.asScala.iterator.map { label =>
+        resource.getReservation.getLabels.getLabelsList.map { label =>
           label.getKey -> label.getValue
-        }.toMap
+        }(collection.breakOut)
       }
 
     /** Match resources with given roles that have at least the given labels */
@@ -128,7 +126,8 @@ object ResourceMatcher {
   def matchResources(offer: Offer, runSpec: RunSpec, runningTasks: => Iterable[Task],
     selector: ResourceSelector): Option[ResourceMatch] = {
 
-    val groupedResources: Map[Role, mutable.Buffer[Protos.Resource]] = offer.getResourcesList.asScala.groupBy(_.getName)
+    val groupedResources: Map[Role, Seq[Protos.Resource]] =
+      offer.getResourcesList.groupBy(_.getName).mapValues(_.toVector)
 
     val scalarResourceMatch = matchScalarResource(groupedResources, selector) _
 
@@ -179,7 +178,7 @@ object ResourceMatcher {
   }
 
   private[this] def matchScalarResource(
-    groupedResources: Map[Role, mutable.Buffer[Protos.Resource]], selector: ResourceSelector)(
+    groupedResources: Map[Role, Seq[Protos.Resource]], selector: ResourceSelector)(
     name: String, requiredValue: Double,
     scope: ScalarMatchResult.Scope = ScalarMatchResult.Scope.NoneDisk): ScalarMatchResult = {
 
